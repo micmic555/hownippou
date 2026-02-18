@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ノウハウDB</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Space+Mono:wght@400;700&display=swap');
+
+  :root {
+    --bg: #f4f6f9;
+    --surface: #ffffff;
+    --surface2: #f0f2f5;
+    --border: #dde1e9;
+    --accent: #1a8a6e;
+    --text: #1a1f2e;
+    --text-muted: #7a8499;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Sans JP', sans-serif;
+    min-height: 100vh;
+  }
+
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .logo {
+    font-family: 'Space Mono', monospace;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--accent);
+    letter-spacing: -0.5px;
+    white-space: nowrap;
+  }
+  .logo span { color: var(--text-muted); }
+
+  .search-wrap {
+    flex: 1;
+    max-width: 480px;
+    position: relative;
+  }
+  .search-wrap input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 16px 8px 36px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: 'Noto Sans JP', sans-serif;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .search-wrap input:focus { border-color: var(--accent); }
+  .search-wrap .icon {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    font-size: 14px;
+  }
+  .header-count {
+    font-size: 13px;
+    color: var(--text-muted);
+    font-family: 'Space Mono', monospace;
+    white-space: nowrap;
+  }
+
+  .layout {
+    display: flex;
+    min-height: calc(100vh - 57px);
+  }
+
+  aside {
+    width: 210px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 20px 0;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .sidebar-title {
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--text-muted);
+    padding: 0 16px 8px;
+    text-transform: uppercase;
+    font-family: 'Space Mono', monospace;
+  }
+  .genre-list { flex: 1; }
+
+  .genre-row {
+    display: flex;
+    align-items: center;
+    border-left: 3px solid transparent;
+    transition: all 0.15s;
+  }
+  .genre-row:hover { background: var(--surface2); }
+  .genre-row.active { border-left-color: var(--accent); background: var(--surface2); }
+
+  .genre-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    padding: 10px 8px 10px 16px;
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 14px;
+    font-family: 'Noto Sans JP', sans-serif;
+    cursor: pointer;
+    text-align: left;
+  }
+  .genre-row.active .genre-btn { color: var(--text); }
+  .genre-btn .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .genre-btn .label { flex: 1; }
+  .genre-btn .cnt {
+    font-size: 12px;
+    font-family: 'Space Mono', monospace;
+    background: var(--bg);
+    padding: 1px 6px;
+    border-radius: 10px;
+    color: var(--text-muted);
+  }
+
+  .genre-edit-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 10px 12px 10px 4px;
+    font-size: 12px;
+    opacity: 0;
+    transition: opacity 0.15s;
+    line-height: 1;
+  }
+  .genre-row:hover .genre-edit-btn { opacity: 1; }
+  .genre-edit-btn:hover { color: var(--accent); }
+
+  .sidebar-bottom {
+    padding: 12px 16px;
+    border-top: 1px solid var(--border);
+    margin-top: 8px;
+  }
+  .btn-sidebar {
+    width: 100%;
+    padding: 8px 12px;
+    border-radius: 7px;
+    border: 1px dashed var(--border);
+    background: none;
+    color: var(--text-muted);
+    font-size: 13px;
+    font-family: 'Noto Sans JP', sans-serif;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s;
+  }
+  .btn-sidebar:hover { border-color: var(--accent); color: var(--accent); }
+
+  main {
+    flex: 1;
+    padding: 24px;
+    overflow-y: auto;
+  }
+  .add-section { margin-bottom: 24px; }
+
+  .btn {
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: none;
+    font-size: 14px;
+    font-family: 'Noto Sans JP', sans-serif;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { opacity: 0.85; }
+  .btn-ghost {
+    background: var(--surface2);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 16px;
+  }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px;
+    transition: border-color 0.2s, transform 0.15s, box-shadow 0.15s;
+    animation: fadeIn 0.3s ease;
+  }
+  .card:hover {
+    border-color: #b0bace;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .card-genre {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11px;
+    font-family: 'Space Mono', monospace;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    letter-spacing: 0.5px;
+  }
+  /* Genre badge colors by index (no user data in style attr) */
+  .gc-0 { background: #e6f5f0; color: #1a8a6e; }
+  .gc-1 { background: #e8f0fa; color: #2c6fbd; }
+  .gc-2 { background: #faf0e6; color: #c07030; }
+  .gc-3 { background: #fae8f0; color: #c0306a; }
+  .gc-4 { background: #f0e8fa; color: #7040c0; }
+  .gd-0 { background: #1a8a6e; }
+  .gd-1 { background: #2c6fbd; }
+  .gd-2 { background: #c07030; }
+  .gd-3 { background: #c0306a; }
+  .gd-4 { background: #7040c0; }
+  .card-title {
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.4;
+    margin-bottom: 8px;
+    color: var(--text);
+  }
+  .card-points { margin-bottom: 12px; list-style: none; }
+  .card-points li {
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.6;
+    padding-left: 14px;
+    position: relative;
+    margin-bottom: 4px;
+  }
+  .card-points li::before {
+    content: '›';
+    position: absolute;
+    left: 0;
+    color: var(--accent);
+    font-weight: 700;
+  }
+  .card-footer {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-top: 1px solid var(--border);
+    padding-top: 10px;
+    flex-wrap: wrap;
+  }
+  .card-url {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-family: 'Space Mono', monospace;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+  }
+  .card-url a { color: var(--text-muted); text-decoration: none; }
+  .card-url a:hover { color: var(--accent); }
+  .card-actions { display: flex; gap: 4px; flex-shrink: 0; }
+  .icon-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 4px 6px;
+    border-radius: 4px;
+    font-size: 13px;
+    transition: all 0.15s;
+  }
+  .icon-btn:hover { background: var(--surface2); color: var(--text); }
+  .icon-btn.del:hover { color: #c0306a; }
+
+  .empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-muted);
+    grid-column: 1/-1;
+  }
+  .empty .big { font-size: 40px; margin-bottom: 12px; }
+  .empty p { font-size: 14px; }
+
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+    width: 100%;
+    max-width: 480px;
+    max-height: 85vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+  }
+  .modal h3 {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    color: var(--text);
+    font-family: 'Space Mono', monospace;
+  }
+  .form-group { margin-bottom: 14px; }
+  .form-group label {
+    display: block;
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    font-family: 'Space Mono', monospace;
+  }
+  .form-group input,
+  .form-group textarea,
+  .form-group select {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: 'Noto Sans JP', sans-serif;
+    outline: none;
+    transition: border-color 0.2s;
+    resize: vertical;
+  }
+  .form-group input:focus,
+  .form-group textarea:focus,
+  .form-group select:focus { border-color: var(--accent); }
+  .modal-btns {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    margin-top: 20px;
+  }
+
+  /* Genre manager */
+  .genre-manager-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 4px; }
+  .genre-manager-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--surface2);
+    border-radius: 8px;
+    padding: 10px 14px;
+  }
+  .genre-color-dot {
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .genre-manager-item input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    border-bottom: 1.5px solid var(--border);
+    color: var(--text);
+    font-size: 14px;
+    font-family: 'Noto Sans JP', sans-serif;
+    padding: 2px 4px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .genre-manager-item input:focus { border-bottom-color: var(--accent); }
+  .genre-manager-item .cnt-badge {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-family: 'Space Mono', monospace;
+    white-space: nowrap;
+    background: var(--surface);
+    padding: 2px 7px;
+    border-radius: 8px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">KNOW<span>//</span>DB</div>
+  <div class="search-wrap">
+    <span class="icon">🔍</span>
+    <input type="text" id="searchInput" placeholder="キーワードで検索…" oninput="renderAll()">
+  </div>
+  <div class="header-count" id="headerCount">0 件</div>
+</header>
+
+<div class="layout">
+  <aside>
+    <div class="sidebar-title">ジャンル</div>
+    <div class="genre-list" id="genreList"></div>
+    <div class="sidebar-bottom">
+      <button class="btn-sidebar" onclick="openGenreManager()">⚙ ジャンル名を編集</button>
+    </div>
+  </aside>
+
+  <main>
+    <div class="add-section">
+      <button class="btn btn-primary" onclick="openEntryModal()">＋ ノウハウを追加</button>
+    </div>
+    <div class="cards" id="cardsContainer"></div>
+  </main>
+</div>
+
+<!-- Entry Modal -->
+<div class="modal-overlay" id="entryOverlay" style="display:none" onclick="closeEntryModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <h3 id="entryModalTitle">// ノウハウを追加</h3>
+    <div class="form-group">
+      <label>タイトル</label>
+      <input type="text" id="editTitle" placeholder="例：作業台の整理整頓ルール" />
+    </div>
+    <div class="form-group">
+      <label>ジャンル</label>
+      <select id="editGenre"></select>
+    </div>
+    <div class="form-group">
+      <label>ポイント（1行1項目）</label>
+      <textarea id="editPoints" rows="5" placeholder="例：毎朝5分で作業台をリセットする&#10;工具は使ったらすぐ戻す"></textarea>
+    </div>
+    <div class="form-group">
+      <label>投稿者</label>
+      <input type="text" id="editAuthor" placeholder="例：山田 太郎" />
+    </div>
+    <div class="form-group">
+      <label>URL</label>
+      <input type="url" id="editUrl" placeholder="https://..." />
+    </div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="closeEntryModal()">キャンセル</button>
+      <button class="btn btn-primary" onclick="saveEntry()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- Genre Manager Modal -->
+<div class="modal-overlay" id="genreOverlay" style="display:none" onclick="closeGenreManager(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <h3>⚙ ジャンル名を編集</h3>
+    <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">名前を変更すると、既存のノウハウにも即時反映されます。</p>
+    <div class="genre-manager-list" id="genreManagerList"></div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="closeGenreManager()">キャンセル</button>
+      <button class="btn btn-primary" onclick="saveGenreNames()">保存</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const DB_KEY = 'knowhow_db_v3';
+const GENRE_KEY = 'knowhow_genres_v3';
+
+const GENRE_COLORS = [
+  { bg: '#e6f5f0', text: '#1a8a6e', dot: '#1a8a6e' },
+  { bg: '#e8f0fa', text: '#2c6fbd', dot: '#2c6fbd' },
+  { bg: '#faf0e6', text: '#c07030', dot: '#c07030' },
+  { bg: '#fae8f0', text: '#c0306a', dot: '#c0306a' },
+  { bg: '#f0e8fa', text: '#7040c0', dot: '#7040c0' },
+];
+
+let db = [];
+let genres = ['改善', '5S', '節約', '接客', '技術'];
+let currentGenre = 'all';
+let editingId = null;
+
+// --- Storage ---
+async function persist() {
+  const json = JSON.stringify(db);
+  const gJson = JSON.stringify(genres);
+  try { await window.storage.set(DB_KEY, json); } catch(e) {}
+  try { await window.storage.set(GENRE_KEY, gJson); } catch(e) {}
+  try { localStorage.setItem(DB_KEY, json); localStorage.setItem(GENRE_KEY, gJson); } catch(e) {}
+}
+
+async function loadData() {
+  try {
+    const r = await window.storage.get(GENRE_KEY);
+    if (r) genres = JSON.parse(r.value);
+  } catch(e) {
+    const g = localStorage.getItem(GENRE_KEY);
+    if (g) try { genres = JSON.parse(g); } catch(e2) {}
+  }
+  try {
+    const r = await window.storage.get(DB_KEY);
+    if (r) db = JSON.parse(r.value);
+  } catch(e) {
+    const d = localStorage.getItem(DB_KEY);
+    if (d) try { db = JSON.parse(d); } catch(e2) {}
+  }
+}
+
+// --- Sidebar ---
+function renderSidebar() {
+  const list = document.getElementById('genreList');
+  let html = `
+    <div class="genre-row ${currentGenre === 'all' ? 'active' : ''}">
+      <button class="genre-btn" onclick="selectGenre('all')">
+        <span class="dot" style="background:#9aa5b8"></span>
+        <span class="label">すべて</span>
+        <span class="cnt">${db.length}</span>
+      </button>
+    </div>`;
+
+  genres.forEach((name, i) => {
+    const count = db.filter(e => e.genreIdx === i).length;
+    html += `
+      <div class="genre-row ${currentGenre === i ? 'active' : ''}">
+        <button class="genre-btn" onclick="selectGenre(${i})">
+          <span class="dot gd-${i}"></span>
+          <span class="label">${esc(name)}</span>
+          <span class="cnt">${count}</span>
+        </button>
+        <button class="genre-edit-btn" onclick="quickEditGenre(${i})" title="ジャンル名を変更">✏️</button>
+      </div>`;
+  });
+  list.innerHTML = html;
+}
+
+function selectGenre(g) {
+  currentGenre = g;
+  renderAll();
+}
+
+// --- Cards ---
+function renderCards() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  let filtered = db;
+  if (currentGenre !== 'all') filtered = filtered.filter(e => e.genreIdx === currentGenre);
+  if (q) filtered = filtered.filter(e =>
+    (e.title||'').toLowerCase().includes(q) ||
+    (e.author||'').toLowerCase().includes(q) ||
+    (e.points||[]).join(' ').toLowerCase().includes(q)
+  );
+
+  document.getElementById('headerCount').textContent = filtered.length + ' 件';
+
+  const container = document.getElementById('cardsContainer');
+  if (!filtered.length) {
+    container.innerHTML = `<div class="empty">
+      <div class="big">📭</div>
+      <p>${currentGenre === 'all' ? 'ノウハウを追加してください' : 'このジャンルにはまだノウハウがありません'}</p>
+    </div>`;
+    return;
+  }
+
+  container.innerHTML = filtered.map(e => {
+    const idx = (typeof e.genreIdx === 'number' && e.genreIdx >= 0 && e.genreIdx < GENRE_COLORS.length) ? e.genreIdx : 0;
+    const c = GENRE_COLORS[idx];
+    const gName = genres[idx] || '不明';
+    return `
+    <div class="card">
+      <span class="card-genre gc-${idx}">● ${esc(gName)}</span>
+      <div class="card-title">${esc(e.title)}</div>
+      ${e.points && e.points.length ? `<ul class="card-points">${e.points.map(p => `<li>${esc(p)}</li>`).join('')}</ul>` : ''}
+      <div class="card-footer">
+        <div class="card-url">${e.url && e.url !== '#' ? `<a href="${esc(e.url)}" target="_blank" rel="noopener">${esc(shortUrl(e.url))}</a>` : ''}</div>
+        ${e.author ? `<span style="font-size:12px;color:var(--text-muted)">👤 ${esc(e.author)}</span>` : ''}
+        <div class="card-actions">
+          <button class="icon-btn" onclick="openEntryModal(${e.id})" title="編集">✏️</button>
+          <button class="icon-btn del" onclick="deleteEntry(${e.id})" title="削除">🗑️</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderAll() {
+  renderSidebar();
+  renderCards();
+}
+
+// --- Entry Modal ---
+function buildGenreSelect(selectedIdx) {
+  document.getElementById('editGenre').innerHTML = genres.map((name, i) =>
+    `<option value="${i}" ${i === selectedIdx ? 'selected' : ''}>${esc(name)}</option>`
+  ).join('');
+}
+
+function openEntryModal(id) {
+  if (id !== undefined) {
+    const e = db.find(x => x.id === id);
+    if (!e) return;
+    editingId = id;
+    document.getElementById('entryModalTitle').textContent = '// ノウハウを編集';
+    document.getElementById('editTitle').value = e.title || '';
+    buildGenreSelect(e.genreIdx || 0);
+    document.getElementById('editPoints').value = (e.points || []).join('\n');
+    document.getElementById('editAuthor').value = e.author || '';
+    document.getElementById('editUrl').value = (e.url !== '#' ? e.url : '') || '';
+  } else {
+    editingId = null;
+    document.getElementById('entryModalTitle').textContent = '// ノウハウを追加';
+    document.getElementById('editTitle').value = '';
+    buildGenreSelect(currentGenre === 'all' ? 0 : currentGenre);
+    document.getElementById('editPoints').value = '';
+    document.getElementById('editAuthor').value = '';
+    document.getElementById('editUrl').value = '';
+  }
+  document.getElementById('entryOverlay').style.display = 'flex';
+}
+
+function closeEntryModal(event) {
+  if (!event || event.target === document.getElementById('entryOverlay'))
+    document.getElementById('entryOverlay').style.display = 'none';
+}
+
+function sanitizeUrl(raw) {
+  const trimmed = raw.trim();
+  if (!trimmed) return '';
+  try {
+    const parsed = new URL(trimmed);
+    if (parsed.protocol === 'https:' || parsed.protocol === 'http:') return trimmed;
+  } catch(e) {}
+  return ''; // reject javascript:, data:, etc.
+}
+
+async function saveEntry() {
+  const title = document.getElementById('editTitle').value.trim();
+  const genreIdx = parseInt(document.getElementById('editGenre').value);
+  const points = document.getElementById('editPoints').value.split('\n').map(p => p.trim()).filter(Boolean);
+  const author = document.getElementById('editAuthor').value.trim();
+  const rawUrl = document.getElementById('editUrl').value.trim();
+  const url = sanitizeUrl(rawUrl) || '#';
+
+  if (rawUrl && url === '#') {
+    alert('URLはhttpsまたはhttpで始まる正しい形式で入力してください');
+    return;
+  }
+  if (!title) { alert('タイトルを入力してください'); return; }
+
+  if (editingId !== null) {
+    const i = db.findIndex(x => x.id === editingId);
+    if (i >= 0) db[i] = { ...db[i], title, genreIdx, points, author, url };
+  } else {
+    db.unshift({ id: Date.now(), title, genreIdx, points, author, url, createdAt: new Date().toLocaleDateString('ja-JP') });
+  }
+  await persist();
+  closeEntryModal();
+  renderAll();
+}
+
+// --- Genre Manager Modal ---
+function openGenreManager() {
+  document.getElementById('genreManagerList').innerHTML = genres.map((name, i) => {
+    const c = GENRE_COLORS[i];
+    const count = db.filter(e => e.genreIdx === i).length;
+    return `
+      <div class="genre-manager-item">
+        <span class="genre-color-dot gd-${i}"></span>
+        <input type="text" id="gm-${i}" value="${esc(name)}" maxlength="20" placeholder="ジャンル名" />
+        <span class="cnt-badge">${count}件</span>
+      </div>`;
+  }).join('');
+  document.getElementById('genreOverlay').style.display = 'flex';
+}
+
+function closeGenreManager(event) {
+  if (!event || event.target === document.getElementById('genreOverlay'))
+    document.getElementById('genreOverlay').style.display = 'none';
+}
+
+async function saveGenreNames() {
+  genres = genres.map((old, i) => {
+    const val = (document.getElementById(`gm-${i}`).value || '').trim();
+    return val || old;
+  });
+  await persist();
+  closeGenreManager();
+  renderAll();
+}
+
+// Quick edit via pencil icon in sidebar
+async function quickEditGenre(idx) {
+  const newName = prompt(`「${genres[idx]}」の新しいジャンル名を入力してください：`, genres[idx]);
+  if (newName === null) return;
+  const trimmed = newName.trim();
+  if (!trimmed) { alert('ジャンル名を入力してください'); return; }
+  genres[idx] = trimmed;
+  await persist();
+  renderAll();
+}
+
+// --- Delete ---
+async function deleteEntry(id) {
+  if (!confirm('このノウハウを削除しますか？')) return;
+  db = db.filter(e => e.id !== id);
+  await persist();
+  renderAll();
+}
+
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function shortUrl(url) {
+  try { return new URL(url).hostname; } catch { return url; }
+}
+
+(async () => {
+  await loadData();
+  renderAll();
+})();
+</script>
+</body>
+</html>
